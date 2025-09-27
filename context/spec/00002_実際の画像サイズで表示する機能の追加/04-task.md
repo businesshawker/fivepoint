@@ -1,0 +1,8 @@
+- `.viewer--actual` の CSS を追加し実寸モードのスタイルを定義する
+- `ImageZoomController` クラスを実装しクリックで実寸/フィットを切り替える
+- `ImageZoomController` にドラッグ移動処理(`onMouseDown`/`onMouseMove`/`onMouseUp`)を実装する
+- アプリ初期化時に `ImageZoomController` を生成する
+- `selectIndex(i)` で新しい画像が表示されたら `applyFitMode()` で実寸モードを解除する
+- `ImageZoomController.toggleActualSize` の正常系・異常系・境界値テストを追加する
+- アーキテクチャ/コールチェーン/処理一覧ドキュメントに `ImageZoomController` を追記する
+- テスト結果を `context/testret/01-result.md` に HTML テーブルで出力する

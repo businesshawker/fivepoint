@@ -1,0 +1,8 @@
+- src/fivepoint.htmlの:rootに--btn-start, --btn-refresh, --btn-seqinit, --btn-initのCSS変数を追加する
+- src/fivepoint.htmlにBtnStart, BtnRefresh, BtnSeqInit, BtnInitAllのCSSクラスを定義し対応する変数で背景色と境界線色を指定する
+- src/fivepoint.htmlのpickDirBtn, refreshBtn, seqInitBtn, initBtn要素へ各CSSクラスを割り当てる
+- context/doc/01-architecture.mdに全クラス・メソッド・関数を含むMermaid構成図を更新する
+- context/doc/02-callchain.mdに全メソッド・関数のコールチェーンをMermaidシーケンス図で更新する
+- context/doc/03-processor.mdに各クラスの役割とメソッド・関数の引数・戻り値・内部処理を追記する
+- 追加・変更したメソッド・関数について正常系・異常系・境界値のテストを実装しcontext/testret/01-result.mdに結果をHTMLテーブルで出力する
+- npm testを実行し全テストが成功することを確認する

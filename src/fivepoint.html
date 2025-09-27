@@ -1,0 +1,1051 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>ローカル画像評価ビューア</title>
+  <style>
+    :root {
+      --bg: #0f1115;
+      --surface: #151924;
+      --surface-alt: #0b0e14;
+      --text: #e6e8ee;
+      --muted: #9aa3b2;
+      --accent: #4ea1ff;
+      --danger: #ff6b6b;
+      --ok: #30d158;
+      --overlay: rgba(0, 0, 0, 0.5);
+      --border: rgba(255, 255, 255, 0.08);
+      --border-subtle: rgba(255, 255, 255, 0.06);
+      --border-strong: rgba(255, 255, 255, 0.12);
+      --header-gradient-start: rgba(255, 255, 255, 0.06);
+      --header-gradient-end: rgba(255, 255, 255, 0.02);
+      --header-border: rgba(255, 255, 255, 0.08);
+      --input-bg: #151924;
+      --input-border: rgba(255, 255, 255, 0.12);
+      --input-border-hover: rgba(255, 255, 255, 0.2);
+      --thumb-hover: rgba(255, 255, 255, 0.04);
+      --dropzone-border: rgba(255, 255, 255, 0.25);
+      --dropzone-hover-bg: rgba(78, 161, 255, 0.08);
+      --dropzone-hover-color: var(--text);
+      --button-primary-bg: #1c2333;
+      --button-primary-border: rgba(78, 161, 255, 0.5);
+      --button-danger-bg: #2b1c20;
+      --button-danger-border: rgba(255, 107, 107, 0.5);
+      --btn-start: #2dbb6d;
+      --btn-refresh: #2d8bbb;
+      --btn-seqinit: #bb8b2d;
+      --btn-init: #bb2d2d;
+    }
+
+    body[data-theme="light"] {
+      --bg: #f3f6ff;
+      --surface: #ffffff;
+      --surface-alt: #eef3ff;
+      --text: #1a1f2b;
+      --muted: #6c7387;
+      --accent: #3b82f6;
+      --overlay: rgba(17, 24, 39, 0.45);
+      --border: rgba(26, 31, 43, 0.12);
+      --border-subtle: rgba(26, 31, 43, 0.08);
+      --border-strong: rgba(26, 31, 43, 0.16);
+      --header-gradient-start: rgba(255, 255, 255, 0.95);
+      --header-gradient-end: rgba(236, 242, 255, 0.7);
+      --header-border: rgba(26, 31, 43, 0.12);
+      --input-bg: #f7f9ff;
+      --input-border: rgba(26, 31, 43, 0.16);
+      --input-border-hover: rgba(59, 130, 246, 0.6);
+      --thumb-hover: rgba(59, 130, 246, 0.12);
+      --dropzone-border: rgba(59, 130, 246, 0.35);
+      --dropzone-hover-bg: rgba(59, 130, 246, 0.15);
+      --dropzone-hover-color: #1a1f2b;
+    }
+
+    html,
+    body {
+      height: 100%;
+    }
+
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--text);
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, "Hiragino Kaku Gothic ProN", Meiryo, sans-serif;
+      overflow: hidden; /* スクロール禁止 */
+      transition: background 0.3s ease, color 0.3s ease;
+    }
+
+    .app {
+      display: grid;
+      grid-template-rows: auto 1fr;
+      height: 100vh;
+      width: 100vw;
+    }
+
+    header {
+      background: linear-gradient(180deg, var(--header-gradient-start), var(--header-gradient-end));
+      border-bottom: 1px solid var(--header-border);
+      padding: 10px 12px;
+      display: grid;
+      grid-template-columns: 1fr auto 1fr;
+      gap: 8px;
+      align-items: center;
+    }
+
+    header .left,
+    header .center,
+    header .right {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .center {
+      justify-content: center;
+    }
+
+    .right {
+      justify-content: flex-end;
+    }
+
+    button,
+    select,
+    input[type="text"] {
+      background: var(--input-bg);
+      color: var(--text);
+      border: 1px solid var(--input-border);
+      border-radius: 10px;
+      padding: 8px 10px;
+      font-size: 14px;
+      transition: border-color 0.2s ease, background 0.2s ease, color 0.2s ease;
+    }
+
+    button:hover,
+    select:hover,
+    input[type="text"]:hover {
+      border-color: var(--input-border-hover);
+    }
+
+    button.primary {
+      background: var(--button-primary-bg);
+      border-color: var(--button-primary-border);
+      color: #ffffff;
+    }
+
+    button.danger {
+      background: var(--button-danger-bg);
+      border-color: var(--button-danger-border);
+      color: #ffffff;
+    }
+
+    .BtnStart,
+    .BtnRefresh,
+    .BtnSeqInit,
+    .BtnInitAll {
+      color: #ffffff;
+    }
+
+    .BtnStart {
+      background: var(--btn-start);
+      border-color: var(--btn-start);
+    }
+
+    .BtnRefresh {
+      background: var(--btn-refresh);
+      border-color: var(--btn-refresh);
+    }
+
+    .BtnSeqInit {
+      background: var(--btn-seqinit);
+      border-color: var(--btn-seqinit);
+    }
+
+    .BtnInitAll {
+      background: var(--btn-init);
+      border-color: var(--btn-init);
+    }
+
+    #themeToggleBtn {
+      min-width: 110px;
+    }
+
+    main {
+      position: relative;
+      height: calc(100vh - 64px);
+      display: grid;
+      grid-template-columns: 1fr 360px; /* 右にサムネ */
+      gap: 8px;
+      padding: 8px;
+      box-sizing: border-box;
+    }
+
+    @media (max-width: 1000px) {
+      main {
+        grid-template-columns: 1fr 280px;
+      }
+    }
+
+    .viewer {
+      background: var(--surface-alt);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      position: relative;
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      overflow-y: auto;
+      overflow-x: hidden;
+    }
+
+    .viewer img {
+      max-width: 100%;
+      width: 100%;
+      height: 100%;
+      object-fit: contain; /* 自動調整 */
+      image-rendering: 100%;
+      transition: opacity 0.15s ease;
+      user-select: none;
+      -webkit-user-drag: none;
+    }
+
+    .viewer--actual {
+      cursor: grab;
+      overflow: hidden;
+    }
+
+    .viewer--dragging {
+      cursor: grabbing;
+    }
+
+    .viewer--actual img {
+      width: auto;
+      height: auto;
+      max-width: none;
+      max-height: none;
+      object-fit: unset;
+    }
+
+    .sidebar {
+      background: var(--surface-alt);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      display: grid;
+      grid-template-rows: auto 1fr auto;
+      overflow: hidden;
+    }
+
+    .panel {
+      padding: 10px;
+      border-bottom: 1px solid var(--border-subtle);
+    }
+
+    .thumbs {
+      overflow: auto;
+      padding: 10px;
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 8px;
+    }
+
+    .thumb {
+      display: grid;
+      grid-template-columns: 60px 1fr;
+      gap: 8px;
+      align-items: center;
+      padding: 6px;
+      border-radius: 10px;
+      border: 1px solid var(--border-subtle);
+      cursor: pointer;
+      transition: background 0.2s ease, border-color 0.2s ease;
+    }
+
+    .thumb:hover {
+      background: var(--thumb-hover);
+      border-color: var(--accent);
+    }
+
+    .thumb.active {
+      outline: 2px solid var(--accent);
+    }
+
+    .thumb img {
+      width: 60px;
+      height: 60px;
+      object-fit: cover;
+      border-radius: 8px;
+    }
+
+    .thumb .meta {
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    .dz {
+      margin: 10px;
+      border: 1px dashed var(--dropzone-border);
+      border-radius: 10px;
+      padding: 10px;
+      text-align: center;
+      color: var(--muted);
+      transition: border-color 0.2s ease, background 0.2s ease, color 0.2s ease;
+    }
+
+    .dz.dragover {
+      border-color: var(--accent);
+      color: var(--dropzone-hover-color);
+      background: var(--dropzone-hover-bg);
+    }
+
+    .hint {
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .grow {
+      flex: 1;
+    }
+
+    .overlay {
+      position: fixed;
+      inset: 0;
+      background: var(--overlay);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+    }
+
+    .overlay.show {
+      display: flex;
+    }
+
+    .overlay .dialog {
+      background: var(--surface);
+      padding: 20px 30px;
+      border-radius: 12px;
+      font-size: 16px;
+      color: var(--text);
+    }
+
+    /* 00007: swap viewer/sidebar columns */
+    main {
+      grid-template-columns: 360px 1fr !important;
+    }
+
+    @media (max-width: 1000px) {
+      main {
+        grid-template-columns: 280px 1fr !important;
+      }
+    }
+
+    .viewer {
+      grid-column: 2;
+    }
+
+    .sidebar {
+      grid-column: 1;
+    }
+  </style>
+</head>
+<body data-theme="dark">
+  <div class="app">
+    <header>
+      <div class="left">
+        <button id="pickDirBtn" class="BtnStart">📁 フォルダ選択</button>
+        <button id="refreshBtn" class="BtnRefresh">🔄 再読み込み</button>
+        <span id="totalCount" class="hint">0枚</span>
+      </div>
+      <div class="center">
+        <label>評価:
+          <select id="ratingSelect">
+            <option value="0">0 (未評価)</option>
+            <option value="1">1</option>
+            <option value="2">2</option>
+            <option value="3">3</option>
+            <option value="4">4</option>
+            <option value="5">5</option>
+          </select>
+        </label>
+        <span id="fileLabel" class="hint" style="margin-left:8px;">—</span>
+      </div>
+      <div class="right">
+        <button id="themeToggleBtn" type="button" title="テーマを切り替え">🌙 ダーク</button>
+        <button id="seqInitBtn" class="BtnSeqInit" title="ファイル名の通番のみを 0-00000 から振り直します">🧹 通番のみ初期化</button>
+        <button id="initBtn" class="BtnInitAll" title="フォルダ内の画像を 0-00000.jpg から通番で初期化">🧹 全て初期化</button>
+      </div>
+    </header>
+
+    <main>
+      <aside class="sidebar">
+        <div class="panel">
+          <div class="hint">ドラッグ&ドロップで追加できます（右の枠）。<br>追加時はフォルダ内の最後の通番（例: 0-00004.jpg）の次番号から 0-00005.jpg… の形式でコピー保存します。</div>
+        </div>
+        <div class="thumbs" id="thumbList"></div>
+        <div class="dz" id="dropzone">ここに画像をドロップすると通番でコピー追加</div>
+      </aside>
+      
+      <div class="viewer" id="viewer">
+        <img id="mainImage" alt="" />
+      </div>
+    </main>
+  </div>
+
+  <div id="progressOverlay" class="overlay">
+    <div class="dialog">変換中... <span id="progressText">0 / 0</span></div>
+  </div>
+
+  <script>
+  const THEME_STORAGE_KEY = 'themePreference';
+
+  function applyTheme(theme_mode) {
+    const normalized = theme_mode === 'light' ? 'light' : 'dark';
+    document.body.dataset.theme = normalized;
+    try {
+      localStorage.setItem(THEME_STORAGE_KEY, normalized);
+    } catch (err) {
+      console.warn('テーマ設定を保存できませんでした:', err);
+    }
+    const toggle_btn = document.getElementById('themeToggleBtn');
+    if (toggle_btn) {
+      if (normalized === 'light') {
+        toggle_btn.textContent = '☀️ ライト';
+      } else {
+        toggle_btn.textContent = '🌙 ダーク';
+      }
+    }
+  }
+
+  function toggleTheme() {
+    const current = document.body.dataset.theme === 'light' ? 'light' : 'dark';
+    const next_theme = current === 'light' ? 'dark' : 'light';
+    applyTheme(next_theme);
+  }
+
+  function initializeTheme() {
+    let stored = null;
+    try {
+      stored = localStorage.getItem(THEME_STORAGE_KEY);
+    } catch (err) {
+      console.warn('テーマ設定を読み込めませんでした:', err);
+    }
+    const initial = stored === 'light' || stored === 'dark' ? stored : 'dark';
+    applyTheme(initial);
+  }
+
+  function bindThemeToggle() {
+    const toggle_btn = document.getElementById('themeToggleBtn');
+    if (!toggle_btn) return;
+    toggle_btn.addEventListener('click', toggleTheme);
+  }
+
+  initializeTheme();
+  bindThemeToggle();
+
+  // ---- ユーティリティ ----
+  class FileNameUtils {
+    static IMG_EXTS = ["jpg","jpeg","png","webp","gif","bmp"];
+
+    static pad5(n) {
+      return n.toString().padStart(5, '0');
+    }
+
+    static isImageName(name) {
+      return FileNameUtils.IMG_EXTS.some(ext => name.toLowerCase().endsWith('.' + ext));
+    }
+
+    static parseRatingName(name) {
+      // フォーマット: {rating}-{rest}.{ext}
+      const m = name.match(/^([0-5])-(.+)\.(\w+)$/);
+      if (!m) return null;
+      return { rating: Number(m[1]), rest: m[2], ext: m[3] };
+    }
+  }
+
+  // ---- アプリ状態 ----
+  let dirHandle = null;
+  let files = []; // {name, handle}
+  let currentIndex = -1;
+
+  const progressOverlay = document.getElementById('progressOverlay');
+  const progressText = document.getElementById('progressText');
+
+  class Progress {
+    constructor(overlay, text) {
+      this.overlay = overlay;
+      this.text = text;
+      this.is_active = false;
+    }
+
+    show(total) {
+      this.is_active = true;
+      this.overlay.classList.add('show');
+      this.text.textContent = `0 / ${total}`;
+      document.activeElement?.blur();
+    }
+
+    update(done, total) {
+      this.text.textContent = `${done} / ${total}`;
+    }
+
+    hide() {
+      this.is_active = false;
+      this.overlay.classList.remove('show');
+    }
+
+    isActive() {
+      return this.is_active;
+    }
+
+    async run(total, work) {
+      this.show(total);
+      try {
+        return await work();
+      } finally {
+        this.hide();
+      }
+    }
+  }
+  class ImageZoomController {
+    constructor(viewer_elem) {
+      this.viewer_elem = viewer_elem;
+      this.img_elem = viewer_elem.querySelector('img');
+      this.is_actual_size = false;
+      this.drag_started = false;
+      this.start_x = undefined;
+      this.start_y = undefined;
+      this.offset_x = 0;
+      this.offset_y = 0;
+      // 画像のネイティブ DnD を無効化
+      if (this.img_elem) {
+        this.img_elem.draggable = false;
+        this.img_elem.addEventListener('dragstart', (e) => e.preventDefault());
+      }
+      // クリックはドラッグ後は無視（誤切替防止）
+      viewer_elem.addEventListener('click', () => {
+        if (this.drag_started) return;
+        this.toggleActualSize();
+      });
+      viewer_elem.addEventListener('mousedown', (e) => this.onMouseDown(e));
+      window.addEventListener('mousemove', (e) => this.onMouseMove(e));
+      window.addEventListener('mouseup', () => this.onMouseUp());
+    }
+
+    resetDragState() {
+      this.start_x = undefined;
+      this.start_y = undefined;
+      this.drag_started = false;
+      this.viewer_elem.classList.remove('viewer--dragging');
+    }
+
+    toggleActualSize() {
+      if (!this.img_elem) return;
+      this.is_actual_size = !this.is_actual_size;
+      if (this.is_actual_size) {
+        this.applyActualSizeMode();
+      } else {
+        this.applyFitMode();
+      }
+    }
+
+    applyFitMode() {
+      if (!this.img_elem) return;
+      this.viewer_elem.classList.remove('viewer--actual');
+      const s = this.img_elem.style;
+      s.width = '100%';
+      s.height = '100%';
+      s.maxWidth = '100%';
+      s.maxHeight = '100%';
+      s.objectFit = 'contain';
+      s.transform = 'none';
+      this.offset_x = 0;
+      this.offset_y = 0;
+    }
+
+    applyActualSizeMode() {
+      if (!this.img_elem) return;
+      this.viewer_elem.classList.add('viewer--actual');
+      const s = this.img_elem.style;
+      s.width = 'auto';
+      s.height = 'auto';
+      s.maxWidth = 'none';
+      s.maxHeight = 'none';
+      s.objectFit = 'unset';
+      s.transform = 'translate(0px, 0px)';
+      this.offset_x = 0;
+      this.offset_y = 0;
+    }
+
+    onMouseDown(evt) {
+      if (!this.is_actual_size || evt.button !== 0) return;
+      evt.preventDefault();
+      this.drag_started = false;
+      this.start_x = evt.clientX;
+      this.start_y = evt.clientY;
+      this.viewer_elem.classList.add('viewer--dragging');
+    }
+
+    onMouseMove(evt) {
+      if (this.start_x === undefined || !this.img_elem) return;
+      const dx = evt.clientX - this.start_x;
+      const dy = evt.clientY - this.start_y;
+      if (!this.drag_started && (Math.abs(dx) >= 4 || Math.abs(dy) >= 4)) {
+        this.drag_started = true;
+      }
+      let new_x = this.offset_x + dx;
+      let new_y = this.offset_y + dy;
+      // 水平方向: ビューアの水平中央揃えを考慮したクランプ
+      const { min_x, max_x, draggable } = this.computeClampRangeX();
+      if (!draggable) {
+        new_x = 0;
+      } else {
+        new_x = Math.max(min_x, Math.min(max_x, new_x));
+      }
+      // 垂直方向: 従来どおり（align-items:flex-start のため中央揃え考慮不要）
+      const max_y = 0;
+      const min_y = Math.min(0, this.viewer_elem.clientHeight - this.img_elem.height);
+      if (this.img_elem.height <= this.viewer_elem.clientHeight) {
+        new_y = 0;
+      } else {
+        new_y = Math.max(min_y, Math.min(max_y, new_y));
+      }
+      this.img_elem.style.transform = `translate(${new_x}px, ${new_y}px)`;
+      this.start_x = evt.clientX;
+      this.start_y = evt.clientY;
+      this.offset_x = new_x;
+      this.offset_y = new_y;
+    }
+
+    onMouseUp() {
+      this.start_x = undefined;
+      this.start_y = undefined;
+      this.viewer_elem.classList.remove('viewer--dragging');
+    }
+
+    // 実寸表示時の水平方向クランプ範囲を算出
+    computeClampRangeX() {
+      const vw = this.viewer_elem.clientWidth;
+      const iw = this.img_elem?.width ?? 0;
+      if (iw <= vw) {
+        return { min_x: 0, max_x: 0, draggable: false };
+      }
+      const baseX = (vw - iw) / 2; // 中央揃え時の画像左端座標
+      const min_x = (vw - iw) - baseX; // 右端が一致する位置
+      const max_x = -baseX;            // 左端が一致する位置
+      return { min_x, max_x, draggable: true };
+    }
+  }
+
+  const progress = new Progress(progressOverlay, progressText);
+  const zoom_controller = new ImageZoomController(document.getElementById('viewer'));
+
+  const DB_NAME = 'fpHandleDB';
+  const STORE_NAME = 'dir';
+
+  function openDB() {
+    return new Promise((resolve, reject) => {
+      const req = indexedDB.open(DB_NAME, 1);
+      req.onupgradeneeded = () => req.result.createObjectStore(STORE_NAME);
+      req.onsuccess = () => resolve(req.result);
+      req.onerror = () => reject(req.error);
+    });
+  }
+
+  async function saveDirHandle(handle) {
+    const db = await openDB();
+    const tx = db.transaction(STORE_NAME, 'readwrite');
+    tx.objectStore(STORE_NAME).put(handle, 'dir');
+    await new Promise((res, rej) => {
+      tx.oncomplete = () => { db.close(); res(); };
+      tx.onerror = () => { db.close(); rej(tx.error); };
+    });
+  }
+
+  async function loadDirHandle() {
+    const db = await openDB();
+    const tx = db.transaction(STORE_NAME, 'readonly');
+    const req = tx.objectStore(STORE_NAME).get('dir');
+    return await new Promise((res, rej) => {
+      req.onsuccess = () => res(req.result);
+      req.onerror = () => rej(req.error);
+      tx.oncomplete = () => db.close();
+    });
+  }
+
+  async function clearDirHandle() {
+    const db = await openDB();
+    const tx = db.transaction(STORE_NAME, 'readwrite');
+    tx.objectStore(STORE_NAME).delete('dir');
+    await new Promise((res, rej) => {
+      tx.oncomplete = () => { db.close(); res(); };
+      tx.onerror = () => { db.close(); rej(tx.error); };
+    });
+  }
+
+  async function verifyPerms(handle, mode = 'read') {
+    const opts = { mode };
+    if ((await handle.queryPermission(opts)) === 'granted') return true;
+    return (await handle.requestPermission(opts)) === 'granted';
+  }
+
+  async function pickDirectory() {
+    try {
+      dirHandle = await window.showDirectoryPicker();
+      if (!await verifyPerms(dirHandle, 'readwrite')) {
+        alert('このフォルダへの読み書き権限が必要です');
+        return;
+      }
+      await saveDirHandle(dirHandle);
+      await loadFiles();
+      await convertNonJpgs(true);
+    } catch (e) {
+      if (e?.name !== 'AbortError') console.error(e);
+    }
+  }
+
+  async function loadFiles() {
+    files = [];
+    for await (const [name, handle] of dirHandle.entries()) {
+      if (handle.kind === 'file' && FileNameUtils.isImageName(name)) {
+        files.push({ name, handle });
+      }
+    }
+    // 形式外ファイルに通番付与（0-00000 や 1-00000 などの形式以外）
+    await verifyPerms(dirHandle, 'readwrite');
+    let max_seq = -1;
+    const seq_re = /^[0-5]-(\d{5})\.\w+$/;
+    const rename_re = /^[0-5]-\d{5}\.\w+$/;
+    const rename_targets = [];
+    for (const f of files) {
+      const m = f.name.match(seq_re);
+      if (m) max_seq = Math.max(max_seq, parseInt(m[1], 10));
+      if (!rename_re.test(f.name)) rename_targets.push(f);
+    }
+    if (rename_targets.length > 0) {
+      await progress.run(rename_targets.length, async () => {
+        let done = 0;
+        for (const f of rename_targets) {
+          max_seq += 1;
+          const ext = f.name.split('.').pop().toLowerCase();
+          const new_name = `0-${FileNameUtils.pad5(max_seq)}.${ext}`;
+          const new_handle = await renameFile(f.handle, new_name);
+          f.name = new_name;
+          f.handle = new_handle;
+          done += 1;
+          progress.update(done, rename_targets.length);
+        }
+      });
+    }
+    // 名前順で安定化（初期化や通番での並びと親和性）
+    files.sort((a,b) => a.name.localeCompare(b.name, undefined, { numeric:true }));
+    renderThumbs();
+    if (files.length) selectIndex(0);
+    else clearViewer();
+  }
+
+  function clearViewer() {
+    currentIndex = -1;
+    document.getElementById('mainImage').src = '';
+    document.getElementById('fileLabel').textContent = '—';
+  }
+
+  function renderThumbs() {
+    const list = document.getElementById('thumbList');
+    list.innerHTML = '';
+    document.getElementById('totalCount').textContent = `${files.length}枚`;
+    files.forEach((f, i) => {
+      const item = document.createElement('div');
+      item.className = 'thumb' + (i === currentIndex ? ' active' : '');
+      const img = document.createElement('img');
+      img.src = URL.createObjectURL(new Blob(), { type: 'image/png' });
+      // createObjectURL を即使うと中身が無いので、実ファイルから生成
+      f.handle.getFile().then(file => {
+        const url = URL.createObjectURL(file);
+        img.src = url;
+      });
+      const meta = document.createElement('div');
+      meta.innerHTML = `<div>${f.name}</div>` +
+        `<div class="meta">${(FileNameUtils.parseRatingName(f.name)?.rating ?? '?')} 点</div>`;
+      item.appendChild(img);
+      item.appendChild(meta);
+      item.addEventListener('click', () => selectIndex(i));
+      list.appendChild(item);
+    });
+  }
+
+  async function selectIndex(i) {
+    if (i < 0 || i >= files.length) return;
+    currentIndex = i;
+    // 切替前の実サイズ状態を保持し、ドラッグ状態をリセット
+    const was_actual = zoom_controller.is_actual_size === true;
+    zoom_controller.resetDragState();
+    if (was_actual) {
+      zoom_controller.applyActualSizeMode();
+    } else {
+      zoom_controller.applyFitMode();
+    }
+    const imgEl = document.getElementById('mainImage');
+    const f = files[i];
+    const file = await f.handle.getFile();
+    const url = URL.createObjectURL(file);
+    imgEl.style.opacity = 0.4;
+    imgEl.onload = () => { imgEl.style.opacity = 1; };
+    imgEl.src = url;
+    // ドロップダウンを現在の評価に同期
+    const parsed = FileNameUtils.parseRatingName(f.name);
+    document.getElementById('ratingSelect').value = parsed ? String(parsed.rating) : '0';
+    document.getElementById('fileLabel').textContent = f.name;
+    renderThumbs();
+  }
+
+  async function renameFile(oldHandle, newName) {
+    // File System Access API に直接 rename は無いので、copy -> delete
+    if (oldHandle.name === newName) {
+      return oldHandle;
+    }
+    const oldFile = await oldHandle.getFile();
+    const bytes = await oldFile.arrayBuffer();
+    // 既存があれば削除（上書き扱い）
+    try { await dirHandle.removeEntry(newName); } catch {}
+    const newHandle = await dirHandle.getFileHandle(newName, { create: true });
+    const writable = await newHandle.createWritable();
+    await writable.write(new Uint8Array(bytes));
+    await writable.close();
+    await dirHandle.removeEntry(oldHandle.name);
+    return newHandle;
+  }
+
+  async function changeRating(rating) {
+    if (currentIndex < 0) return;
+    const f = files[currentIndex];
+    const parsed = FileNameUtils.parseRatingName(f.name);
+    if (!parsed) {
+      // 未フォーマット名は rest をそのまま使う（拡張子含む）
+      const ext = f.name.split('.').pop();
+      const base = f.name.slice(0, -(ext.length + 1));
+      const newName = `${rating}-${base}.${ext}`;
+      const newHandle = await renameFile(f.handle, newName);
+      files[currentIndex] = { name: newName, handle: newHandle };
+    } else {
+      const newName = `${rating}-${parsed.rest}.${parsed.ext}`;
+      const newHandle = await renameFile(f.handle, newName);
+      files[currentIndex] = { name: newName, handle: newHandle };
+    }
+    files.sort((a,b) => a.name.localeCompare(b.name, undefined, { numeric:true }));
+    renderThumbs();
+    // 現在のファイル位置を更新
+    const newIdx = files.findIndex(x => x.name === (files[currentIndex]?.name));
+    selectIndex(Math.max(0, newIdx));
+  }
+
+  async function initSequential() {
+    if (!dirHandle) return alert('フォルダを選択してください');
+    if (!confirm('フォルダ内の画像を 0-00000.jpg から順にリネームします。よろしいですか？')) return;
+    await verifyPerms(dirHandle, 'readwrite');
+    // まず現在の一覧を読み直し
+    await loadFiles();
+    const plans = [];
+    let idx = 0;
+    for (const entry of files) {
+      const ext = entry.name.split('.').pop();
+      const finalName = `0-${FileNameUtils.pad5(idx)}.${ext.toLowerCase()}`;
+      plans.push({ entry, finalName });
+      idx++;
+    }
+    await progress.run(plans.length, async () => {
+      // 衝突回避のため一旦一時名にリネーム
+      for (const p of plans) {
+        const ext = p.entry.name.split('.').pop().toLowerCase();
+        const tmpName = `__tmp__${Date.now()}_${Math.random().toString(16).slice(2)}.${ext}`;
+        const tmpHandle = await renameFile(p.entry.handle, tmpName);
+        p.entry.name = tmpName; p.entry.handle = tmpHandle;
+      }
+      // 目的の名前へ再リネーム
+      let done = 0;
+      for (const p of plans) {
+        const newHandle = await renameFile(p.entry.handle, p.finalName);
+        p.entry.name = p.finalName; p.entry.handle = newHandle;
+        done += 1;
+        progress.update(done, plans.length);
+      }
+    });
+    files.sort((a,b) => a.name.localeCompare(b.name, undefined, { numeric:true }));
+    renderThumbs();
+    selectIndex(0);
+  }
+
+  async function initSequenceOnly() {
+    if (!dirHandle) return alert('フォルダを選択してください');
+    if (!confirm('ファイル名の通番のみを 0-00000 から振り直します。評価は保持されます。よろしいですか？')) return;
+    await verifyPerms(dirHandle, 'readwrite');
+    await loadFiles();
+    const plans = [];
+    let idx = 0;
+    for (const entry of files) {
+      const info = FileNameUtils.parseRatingName(entry.name);
+      const rating = info?.rating ?? 0;
+      const ext = (info?.ext || entry.name.split('.').pop()).toLowerCase();
+      const finalName = `${rating}-${FileNameUtils.pad5(idx)}.${ext}`;
+      plans.push({ entry, finalName });
+      idx++;
+    }
+    await progress.run(plans.length, async () => {
+      // 衝突回避のため一旦一時名にリネーム
+      for (const p of plans) {
+        const ext = p.entry.name.split('.').pop().toLowerCase();
+        const tmpName = `__tmp__${Date.now()}_${Math.random().toString(16).slice(2)}.${ext}`;
+        const tmpHandle = await renameFile(p.entry.handle, tmpName);
+        p.entry.name = tmpName; p.entry.handle = tmpHandle;
+      }
+      // 目的の名前へ再リネーム
+      let done = 0;
+      for (const p of plans) {
+        const newHandle = await renameFile(p.entry.handle, p.finalName);
+        p.entry.name = p.finalName; p.entry.handle = newHandle;
+        done += 1;
+        progress.update(done, plans.length);
+      }
+    });
+    files.sort((a,b) => a.name.localeCompare(b.name, undefined, { numeric:true }));
+    renderThumbs();
+    selectIndex(0);
+  }
+
+  async function convertNonJpgs(auto = false) {
+    if (!dirHandle) { if (!auto) alert('フォルダを選択してください'); return; }
+    if (!auto && !confirm('フォルダ内の jpg 以外の画像を jpg に変換します。よろしいですか？')) return;
+    await verifyPerms(dirHandle, 'readwrite');
+    const targets = files.filter(f => f.name.split('.').pop().toLowerCase() !== 'jpg');
+    if (targets.length === 0) return;
+    const beforeUnload = (e) => { e.preventDefault(); e.returnValue = '画像変換中です。'; };
+    window.addEventListener('beforeunload', beforeUnload);
+    try {
+      await progress.run(targets.length, async () => {
+        let done = 0;
+        for (const f of targets) {
+          const ext = f.name.split('.').pop().toLowerCase();
+          const newName = f.name.replace(/\.[^.]+$/, '.jpg');
+          if (ext === 'jpeg') {
+            const newHandle = await renameFile(f.handle, newName);
+            f.name = newName; f.handle = newHandle;
+          } else {
+            const file = await f.handle.getFile();
+            const bitmap = await createImageBitmap(file);
+            const canvas = document.createElement('canvas');
+            canvas.width = bitmap.width;
+            canvas.height = bitmap.height;
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(bitmap, 0, 0);
+            const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/jpeg', 0.92));
+            try { await dirHandle.removeEntry(newName); } catch {}
+            const newHandle = await dirHandle.getFileHandle(newName, { create: true });
+            const writable = await newHandle.createWritable();
+            await writable.write(blob);
+            await writable.close();
+            await dirHandle.removeEntry(f.name);
+          }
+          done += 1;
+          progress.update(done, targets.length);
+        }
+      });
+    } finally {
+      window.removeEventListener('beforeunload', beforeUnload);
+    }
+    await loadFiles();
+  }
+
+  async function getLastSeqNumber() {
+    // 現在のフォルダで "*-NNNNN.ext" の最大 NNNNN を返す
+    await loadFiles();
+    let maxNum = -1;
+    for (const f of files) {
+      const m = f.name.match(/^([0-5])-(\d{5})\.(\w+)$/);
+      if (m) {
+        maxNum = Math.max(maxNum, parseInt(m[2], 10));
+      }
+    }
+    return maxNum;
+  }
+
+  async function copyInWithSequence(fileList) {
+    if (!dirHandle) return alert('フォルダを選択してください');
+    await verifyPerms(dirHandle, 'readwrite');
+    let last = await getLastSeqNumber();
+    let last_new_name = '';
+    for (const file of fileList) {
+      last += 1;
+      const parsed = FileNameUtils.parseRatingName(file.name);
+      let rating = 0;
+      let ext = (file.name.split('.').pop() || 'jpg').toLowerCase();
+      if (parsed && /^\d{5}$/.test(parsed.rest)) {
+        rating = parsed.rating;
+        ext = parsed.ext.toLowerCase();
+      }
+      const new_name = `${rating}-${FileNameUtils.pad5(last)}.${ext}`;
+      // 既存があれば避ける
+      try { await dirHandle.removeEntry(new_name); } catch {}
+      const new_handle = await dirHandle.getFileHandle(new_name, { create: true });
+      const writable = await new_handle.createWritable();
+      await writable.write(await file.arrayBuffer());
+      await writable.close();
+      last_new_name = new_name;
+    }
+    await loadFiles();
+    selectIndex(files.findIndex(f => f.name === last_new_name));
+  }
+
+  // ---- イベント結線 ----
+  document.getElementById('pickDirBtn').addEventListener('click', pickDirectory);
+  document.getElementById('refreshBtn').addEventListener('click', async () => {
+    if (dirHandle) { await loadFiles(); await convertNonJpgs(true); }
+  });
+  document.getElementById('seqInitBtn').addEventListener('click', initSequenceOnly);
+  document.getElementById('initBtn').addEventListener('click', initSequential);
+  document.getElementById('ratingSelect').addEventListener('change', (e) => { if (progress.isActive()) return; changeRating(Number(e.target.value)); });
+
+  // 数字キー(0〜5)で評価変更
+  window.addEventListener('keydown', (e) => {
+    if (progress.isActive()) return;
+    if (e.key >= '0' && e.key <= '5') changeRating(Number(e.key));
+  });
+
+  // ドロップゾーン
+  const dz = document.getElementById('dropzone');
+  const prevent = (e) => { e.preventDefault(); e.stopPropagation(); };
+  ['dragenter','dragover','dragleave','drop'].forEach(evt => dz.addEventListener(evt, prevent));
+  dz.addEventListener('dragenter', () => dz.classList.add('dragover'));
+  dz.addEventListener('dragleave', () => dz.classList.remove('dragover'));
+  dz.addEventListener('drop', async (e) => {
+    dz.classList.remove('dragover');
+    const items = [...(e.dataTransfer?.items || [])];
+    const files = [];
+    for (const item of items) {
+      if (item.kind === 'file') {
+        const file = item.getAsFile();
+        if (file && FileNameUtils.isImageName(file.name)) files.push(file);
+      }
+    }
+    if (files.length) await copyInWithSequence(files);
+  });
+
+  // セッション復元
+  (async () => {
+    if (sessionStorage.getItem('hasSession')) {
+      const handle = await loadDirHandle();
+      if (handle && await verifyPerms(handle, 'readwrite')) {
+        dirHandle = handle;
+        await loadFiles();
+        await convertNonJpgs(true);
+      }
+    } else {
+      sessionStorage.setItem('hasSession', '1');
+      await clearDirHandle();
+    }
+  })();
+
+  // 初期ヒント
+  if (!('showDirectoryPicker' in window)) {
+    alert('このアプリは Chrome/Edge 系の File System Access API が必要です。最新の Chrome をお使いください。');
+  }
+  </script>
+</body>
+</html>

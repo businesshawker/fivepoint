@@ -1,0 +1,89 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="740" viewBox="0 0 1200 740">
+  <style>
+    .box { fill:#111723; stroke:#4a5568; stroke-width:2; rx:8; ry:8; }
+    .panel { fill:#0b0e14; stroke:#4a5568; stroke-width:2; rx:8; ry:8; }
+    .label { fill:#e6e8ee; font:12px/1.2 'Segoe UI',sans-serif; }
+    .title { fill:#9aa3b2; font:bold 14px 'Segoe UI',sans-serif; }
+    .num { fill:#111723; stroke:#4ea1ff; stroke-width:2; }
+    .numText { fill:#e6e8ee; font:bold 12px 'Segoe UI',sans-serif; text-anchor:middle; dominant-baseline:middle; }
+    .dash { fill:none; stroke:#718096; stroke-width:1; stroke-dasharray:4 4; }
+  </style>
+
+  <!-- Header -->
+  <rect class="box" x="20" y="20" width="1160" height="64"/>
+  <text class="title" x="30" y="44">Header</text>
+  <!-- Header Left (1) -->
+  <rect class="panel" x="30" y="30" width="380" height="44"/>
+  <circle class="num" cx="40" cy="52" r="12"/><text class="numText" x="40" y="52">1</text>
+  <text class="label" x="60" y="56">ヘッダー左セクション</text>
+  <!-- pickDir (2) -->
+  <rect class="panel" x="46" y="36" width="110" height="32"/>
+  <circle class="num" cx="56" cy="52" r="10"/><text class="numText" x="56" y="52">2</text>
+  <!-- refresh (3) -->
+  <rect class="panel" x="164" y="36" width="110" height="32"/>
+  <circle class="num" cx="174" cy="52" r="10"/><text class="numText" x="174" y="52">3</text>
+  <!-- totalCount (4) -->
+  <rect class="panel" x="282" y="36" width="110" height="32"/>
+  <circle class="num" cx="292" cy="52" r="10"/><text class="numText" x="292" y="52">4</text>
+
+  <!-- Header Center (5) -->
+  <rect class="panel" x="430" y="30" width="340" height="44"/>
+  <circle class="num" cx="440" cy="52" r="12"/><text class="numText" x="440" y="52">5</text>
+  <text class="label" x="460" y="56">ヘッダー中央セクション</text>
+  <!-- rating (6) -->
+  <rect class="panel" x="448" y="36" width="140" height="32"/>
+  <circle class="num" cx="458" cy="52" r="10"/><text class="numText" x="458" y="52">6</text>
+  <!-- fileLabel (7) -->
+  <rect class="panel" x="596" y="36" width="164" height="32"/>
+  <circle class="num" cx="606" cy="52" r="10"/><text class="numText" x="606" y="52">7</text>
+
+  <!-- Header Right (8) -->
+  <rect class="panel" x="790" y="30" width="380" height="44"/>
+  <circle class="num" cx="800" cy="52" r="12"/><text class="numText" x="800" y="52">8</text>
+  <text class="label" x="820" y="56">ヘッダー右セクション</text>
+  <!-- seqInit (9) -->
+  <rect class="panel" x="806" y="36" width="160" height="32"/>
+  <circle class="num" cx="816" cy="52" r="10"/><text class="numText" x="816" y="52">9</text>
+  <!-- initAll (10) -->
+  <rect class="panel" x="972" y="36" width="160" height="32"/>
+  <circle class="num" cx="982" cy="52" r="10"/><text class="numText" x="982" y="52">10</text>
+
+  <!-- Main area -->
+  <rect class="box" x="20" y="100" width="820" height="600"/>
+  <text class="title" x="30" y="124">Viewer</text>
+  <!-- viewer (11) -->
+  <circle class="num" cx="40" cy="146" r="12"/><text class="numText" x="40" y="146">11</text>
+  <!-- mainImage (12) -->
+  <rect class="panel" x="40" y="160" width="780" height="520"/>
+  <circle class="num" cx="50" cy="176" r="10"/><text class="numText" x="50" y="176">12</text>
+
+  <!-- Sidebar -->
+  <rect class="box" x="860" y="100" width="320" height="600"/>
+  <text class="title" x="870" y="124">Sidebar</text>
+  <!-- sidebar (13) -->
+  <circle class="num" cx="880" cy="146" r="12"/><text class="numText" x="880" y="146">13</text>
+  <!-- hint panel (14) -->
+  <rect class="panel" x="870" y="110" width="300" height="80"/>
+  <circle class="num" cx="880" cy="126" r="10"/><text class="numText" x="880" y="126">14</text>
+  <!-- thumbs (15) -->
+  <rect class="panel" x="870" y="200" width="300" height="380"/>
+  <circle class="num" cx="880" cy="216" r="10"/><text class="numText" x="880" y="216">15</text>
+  <!-- dropzone (16) -->
+  <rect class="panel" x="870" y="590" width="300" height="100"/>
+  <circle class="num" cx="880" cy="606" r="10"/><text class="numText" x="880" y="606">16</text>
+
+  <!-- Overlay (progress) -->
+  <rect class="dash" x="20" y="20" width="1160" height="680"/>
+  <text class="title" x="1020" y="30">Overlay (処理中)</text>
+  <!-- progress overlay (17) -->
+  <circle class="num" cx="1000" cy="28" r="12"/><text class="numText" x="1000" y="28">17</text>
+  <!-- dialog + progress text (18) -->
+  <rect class="panel" x="520" y="330" width="200" height="80"/>
+  <circle class="num" cx="530" cy="340" r="10"/><text class="numText" x="530" y="340">18</text>
+
+  <!-- Legend (names) -->
+  <g transform="translate(20,710)">
+    <text class="label">凡例: 番号は context/doc/04-ui.md の一覧に対応</text>
+  </g>
+</svg>
+
